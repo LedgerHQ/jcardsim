@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package javacard.security;
+package com.licel.jcardsim.extensions.security;
 
+import javacard.security.Key;
+import javacard.security.CryptoException;
 import com.licel.jcardsim.crypto.AsymmetricSignatureImpl;
 import com.licel.jcardsim.crypto.SymmetricSignatureImpl;
 
@@ -211,6 +213,13 @@ public abstract class Signature {
      * SEQUENCE ::= { r INTEGER, s INTEGER }
      */
     public static final byte ALG_ECDSA_SHA_256 = 33;
+   /* 
+     * Signature algorithm <CODE>ALG_ECDSA_SHA_256_RFC6979</CODE> generates a 32-bytes
+     * SHA-256 digest and signs/verifies the digest using ECDSA with a deterministic K.  The signature is encoded as an ASN.1
+     * sequence of two INTEGER values, r and s, in that order:
+     * SEQUENCE ::= { r INTEGER, s INTEGER }
+     */
+    public static final byte ALG_ECDSA_SHA_256_RFC6979 = (byte)0xFF;
     /**
      * Signature algorithm <code>ALG_AES_MAC_128_NOPAD</code> generates a 16-byte MAC
      * using AES with blocksize 128 in CBC mode and does not pad input data.
@@ -351,9 +360,9 @@ public abstract class Signature {
      * <li><code>CryptoException.NO_SUCH_ALGORITHM</code> if the requested algorithm
      * or shared access mode is not supported.</ul>
      */
-    public static final Signature getInstance(byte algorithm, boolean externalAccess)
+    public static final javacard.security.Signature getInstance(byte algorithm, boolean externalAccess)
             throws CryptoException {
-        Signature instance = null;
+        javacard.security.Signature instance = null;
         if (externalAccess) {
             CryptoException.throwIt(CryptoException.NO_SUCH_ALGORITHM);
         }
@@ -365,6 +374,7 @@ public abstract class Signature {
             case ALG_RSA_RIPEMD160_PKCS1:
             case ALG_ECDSA_SHA:
             case ALG_ECDSA_SHA_256:
+            case ALG_ECDSA_SHA_256_RFC6979:
             case ALG_RSA_SHA_ISO9796_MR:    
                 instance = new AsymmetricSignatureImpl(algorithm);
                 break;

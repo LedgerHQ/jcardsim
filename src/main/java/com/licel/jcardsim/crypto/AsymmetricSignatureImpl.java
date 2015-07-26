@@ -28,11 +28,13 @@ import org.bouncycastle.crypto.SignerWithRecovery;
 import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.signers.DSADigestSigner;
 import org.bouncycastle.crypto.signers.ECDSASigner;
 import org.bouncycastle.crypto.signers.ISO9796d2Signer;
 import org.bouncycastle.crypto.signers.RSADigestSigner;
+import org.bouncycastle.crypto.signers.HMacDSAKCalculator;
 
 /*
  * Implementation <code>Signature</code> with asymmetric keys based
@@ -74,6 +76,12 @@ public class AsymmetricSignatureImpl extends Signature implements SignatureMessa
             case ALG_ECDSA_SHA:
                 engine = new DSADigestSigner(new ECDSASigner(), new SHA1Digest());
                 break;
+            case ALG_ECDSA_SHA_256:
+                engine = new DSADigestSigner(new ECDSASigner(), new SHA256Digest());
+                break;
+            case com.licel.jcardsim.extensions.security.Signature.ALG_ECDSA_SHA_256_RFC6979:
+                engine = new DSADigestSigner(new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest())), new SHA256Digest());
+                break;
         }
     }
 
@@ -111,6 +119,7 @@ public class AsymmetricSignatureImpl extends Signature implements SignatureMessa
             case ALG_RSA_RIPEMD160_PKCS1:
                 return (short)(key.getSize()>>3);
             case ALG_ECDSA_SHA:
+            case ALG_ECDSA_SHA_256:
                 // x,y + der payload
                 return (short)(((key.getSize()*2)>>3) + 8);
         }

@@ -15,6 +15,9 @@
  */
 package com.licel.jcardsim.crypto;
 
+import com.licel.jcardsim.utils.ByteUtil;
+
+import java.math.BigInteger;
 import javacard.framework.Util;
 import javacard.security.CryptoException;
 import javacard.security.KeyAgreement;
@@ -25,6 +28,10 @@ import org.bouncycastle.crypto.agreement.ECDHCBasicAgreement;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.BasicAgreement;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.math.ec.ECFieldElement;
+import org.bouncycastle.math.ec.ECPoint;
 
 /**
  * Implementation <code>KeyAgreement</code> based
@@ -34,6 +41,30 @@ import org.bouncycastle.crypto.params.ECPublicKeyParameters;
  * @see ECDHCBasicAgreement
  */
 public class KeyAgreementImpl extends KeyAgreement {
+
+    public class ECDHBasicAgreementXY
+    implements BasicAgreement
+    {
+
+       public ECDHBasicAgreementXY()
+       {
+       }
+
+       public void init(CipherParameters cipherparameters)
+       {
+           key = (ECPrivateKeyParameters)cipherparameters;
+       }
+
+       public BigInteger calculateAgreement(CipherParameters cipherparameters)
+       {
+           ECPublicKeyParameters ecpublickeyparameters = (ECPublicKeyParameters)cipherparameters;
+           ECPoint ecpoint = ecpublickeyparameters.getQ().multiply(key.getD());
+           return new BigInteger(ecpoint.getEncoded());
+       }
+
+       private ECPrivateKeyParameters key;
+    }
+
 
     BasicAgreement engine;
     SHA1Digest digestEngine;
@@ -45,7 +76,11 @@ public class KeyAgreementImpl extends KeyAgreement {
         this.algorithm = algorithm;
         switch (algorithm) {
             case ALG_EC_SVDP_DH:
+            case ALG_EC_SVDP_DH_PLAIN:
                 engine = new ECDHBasicAgreement();
+                break;
+            case com.licel.jcardsim.extensions.security.KeyAgreement.ALG_EC_SVDP_DH_PLAIN_XY:
+                engine = new ECDHBasicAgreementXY();
                 break;
             case ALG_EC_SVDP_DHC:
                 engine = new ECDHCBasicAgreement();
@@ -82,10 +117,23 @@ public class KeyAgreementImpl extends KeyAgreement {
         ECPublicKeyParameters ecp = new ECPublicKeyParameters(
                 ((ECPrivateKeyParameters) privateKey.getParameters()).getParameters().getCurve().decodePoint(publicKey), ((ECPrivateKeyParameters) privateKey.getParameters()).getParameters());
         byte[] result = engine.calculateAgreement(ecp).toByteArray();
-        // apply SHA1-hash (see spec)
-        byte[] hashResult = new byte[20];
-        digestEngine.update(result, 0, result.length);
-        digestEngine.doFinal(hashResult, 0);
+        byte[] hashResult = null;
+        if (algorithm == ALG_EC_SVDP_DH) {
+           // apply SHA1-hash (see spec)
+           hashResult = new byte[20];
+           digestEngine.update(result, 0, result.length);
+           digestEngine.doFinal(hashResult, 0);
+        }
+        else
+        if (algorithm == ALG_EC_SVDP_DH_PLAIN) {
+           hashResult = new byte[32];
+           System.arraycopy(result, 0, hashResult, 0, 32);
+        }
+        else
+        if (algorithm == com.licel.jcardsim.extensions.security.KeyAgreement.ALG_EC_SVDP_DH_PLAIN_XY) {
+           hashResult = new byte[65];
+           System.arraycopy(result, 0, hashResult, 0, result.length); 
+        }
         Util.arrayCopyNonAtomic(hashResult, (short) 0, secret, secretOffset, (short) hashResult.length);
         return (short) hashResult.length;
     }

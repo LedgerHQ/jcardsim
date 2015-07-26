@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package javacard.security;
+package com.licel.jcardsim.extensions.security;
 
+import javacard.security.PrivateKey;
+import javacard.security.CryptoException;
 import com.licel.jcardsim.crypto.KeyAgreementImpl;
 
 /**
@@ -45,6 +47,12 @@ public abstract class KeyAgreement {
      * version, with cofactor multiplication, as per [IEEE P1363].
      */
     public static final byte ALG_EC_SVDP_DH_PLAIN = 3;
+    /**
+     * Elliptic curve secret value derivation primitive, Diffie-Hellman
+     * version, with cofactor multiplication, as per [IEEE P1363].
+     */
+    public static final byte ALG_EC_SVDP_DH_PLAIN_XY = (byte)0xFF;
+
 
     /**
      * Protected constructor.
@@ -68,7 +76,7 @@ public abstract class KeyAgreement {
      * algorithm or shared access mode is not supported.
      * </ul>
      */
-    public static final KeyAgreement getInstance(byte algorithm, boolean externalAccess)
+    public static final javacard.security.KeyAgreement getInstance(byte algorithm, boolean externalAccess)
             throws CryptoException {
         return new KeyAgreementImpl(algorithm);
     }

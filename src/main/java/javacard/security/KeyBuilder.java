@@ -94,6 +94,16 @@ public class KeyBuilder {
      */
     public static final byte TYPE_EC_FP_PRIVATE = 12;
     /**
+     * Key object which implements the interface type <code>ECPrivateKey</code>
+     * for EC operations over large prime fields.
+     */
+    public static final byte TYPE_EC_FP_PRIVATE_TRANSIENT_RESET = 30;
+    /**
+     * Key object which implements the interface type <code>ECPrivateKey</code>
+     * for EC operations over large prime fields.
+     */
+    public static final byte TYPE_EC_FP_PRIVATE_TRANSIENT_DESELECT = 31;
+    /**
      * <code>Key</code> object which implements interface type <code>AESKey</code>
      * with CLEAR_ON_RESET transient key data.
      * <p>This <code>Key</code> object implicitly performs a <code>clearKey()</code> on
@@ -352,6 +362,8 @@ public class KeyBuilder {
                 key = new ECPublicKeyImpl(keyType, keyLength);
                 break;
             case TYPE_EC_FP_PRIVATE:
+            case TYPE_EC_FP_PRIVATE_TRANSIENT_RESET:
+            case TYPE_EC_FP_PRIVATE_TRANSIENT_DESELECT: 
                 if (keyLength != 112 && keyLength != 128 && keyLength != 160 && keyLength != 192 && keyLength != 256) {
                     CryptoException.throwIt(CryptoException.ILLEGAL_VALUE);
                 }
